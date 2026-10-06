@@ -1,0 +1,1470 @@
+{
+  "name": "F-6 LeadPilot AI — Lead Generation & Outreach (Public Template)",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-Api-Key",
+              "value": "YOUR_GOOGLE_PLACES_API_KEY"
+            },
+            {
+              "name": " X-Goog-FieldMask",
+              "value": "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"textQuery\": \"{{ $json.Industry }} in {{ $json.City }}, {{ $json.Country }}\",\n  \"pageSize\": 3\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -2976,
+        208
+      ],
+      "id": "a1d8a2a0-1d13-4bae-87d8-b23803bd4051",
+      "name": "GET BUSINESS"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "emails",
+              "cssSelector": "a[href^=\"mailto:\"]",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "page_title",
+              "cssSelector": "title"
+            },
+            {
+              "key": "meta_description",
+              "cssSelector": "meta[name=\"description\"]",
+              "returnValue": "attribute",
+              "attribute": "content"
+            },
+            {
+              "key": "headings",
+              "cssSelector": "h1, h2, h3",
+              "returnArray": true
+            },
+            {
+              "key": "paragraphs",
+              "cssSelector": "main p, article p, section p",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1776,
+        192
+      ],
+      "id": "c4d72939-e079-460f-813b-9c4f384ee115",
+      "name": "HOME PAGE EMAIL ADDRESS"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.websiteUri }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -2000,
+        192
+      ],
+      "id": "dc47106c-0091-4268-836c-7f20d785ec3a",
+      "name": "OPEN WEBSITE HOMEPAGE",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f29104fc-eb2d-418d-8775-ced141ad7622",
+              "leftValue": "={{ $json.emails?.length || 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1328,
+        192
+      ],
+      "id": "69f66191-bffb-483b-91ec-8b9f7ae43cb4",
+      "name": "EMAIL FOUND?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7f59f12-821b-4ef4-99dd-f749fd7b2e22",
+              "name": "place_id",
+              "value": "={{ $(\"Split Out\").item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "72ab8c3f-8f62-4dd4-955d-cfd8d1da6574",
+              "name": "business_name",
+              "value": "={{ $(\"Split Out\").item.json.displayName.text }}",
+              "type": "string"
+            },
+            {
+              "id": "2a18df8f-cc63-4559-b5ec-9a1fcb63c95b",
+              "name": "website",
+              "value": "={{ $(\"Split Out\").item.json.websiteUri }}",
+              "type": "string"
+            },
+            {
+              "id": "ca54b1c6-949c-4840-8bcc-9c23dc37fef5",
+              "name": "phone",
+              "value": "={{ $(\"Split Out\").item.json.nationalPhoneNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "138289fe-6260-44aa-8916-6748545b9b5f",
+              "name": "address",
+              "value": "={{ $(\"Split Out\").item.json.formattedAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "eca6f713-5e64-4b39-850b-c2833ad97297",
+              "name": "business_type",
+              "value": "={{ $(\"Split Out\").item.json.primaryType }}",
+              "type": "string"
+            },
+            {
+              "id": "456540f5-7abf-44dc-824a-406e7aca91b4",
+              "name": "email",
+              "value": "={{ $json.emails[0].replace('mailto:', '').split('?')[0].trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "47c78f1b-86eb-4684-aee1-b2f35deb9440",
+              "name": "website_context",
+              "value": "={{ $(\"Clean Website Content\").item.json.website_context }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1104,
+        96
+      ],
+      "id": "37736bd1-71cb-4982-8981-29cf203374b4",
+      "name": "Prepare Lead"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "places",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2832,
+        208
+      ],
+      "id": "6b8764e1-bc84-456f-8f64-0efc67135454",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this potential lead.\n\nBusiness Name: {{ $json.business_name }}\nBusiness Type: {{ $json.business_type }}\nWebsite: {{ $json.website }}\nLocation: {{ $json.address }}\n\nWebsite Context:\n{{ $json.website_context }}\n\nDetermine whether this business is a suitable lead for one of our approved automation services.\n\nUse only the information provided above as evidence.",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a lead qualification and automation service-matching agent.\n\nAnalyze businesses using ONLY the provided business data and website context.\n\nRULES:\n- Never invent business problems, needs, tools, employees, or processes.\n- Base conclusions only on supplied evidence.\n- Recommend exactly ONE service when there is sufficient evidence.\n- If evidence is weak, lower the score.\n- Do not create an outreach email.\n- Do not recommend website development, web design, SEO, domains, hosting, website security, or website maintenance.\n-business_summary must be a concise 1–2 sentence summary of what the business does, based only on the provided website context. Do not invent information.\n\nAPPROVED SERVICES:\n- Lead capture and lead management automation\n- Automated lead follow-up workflows\n- Real-estate property matching automation\n- Customer inquiry/support automation\n- Invoice and payment tracking automation\n- Email notification and reminder automation\n- AI content creation workflows\n- Social media content workflow automation\n- Data entry and Google Sheets automation\n- CRM workflow automation\n- Reporting and business process automation\n- Custom n8n workflow automation\n\nSCORING:\n80-100 = Strong opportunity\n60-79 = Good potential lead\n40-59 = Weak or uncertain opportunity\n0-39 = Poor fit\n\nqualified must be true only when lead_score is 60 or higher.\n\nReturn ONLY the JSON object shown below.\nDo not wrap the result inside an \"output\" object.\nDo not use Markdown or ```json code fences.\nDo not write any text before or after the JSON.\n\n{\n  \"lead_score\": 0,\n  \"qualified\": false,\n  \"business_summary\": \"\",\n  \"recommended_service\": \"\",\n  \"automation_opportunity\": \"\",\n  \"qualification_reason\": \"\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -864,
+        96
+      ],
+      "id": "d1d5a579-fc97-44e6-9ea2-0063448319b8",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        240
+      ],
+      "id": "5f48f91b-1487-4494-90f2-962b5f4ad1aa",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "tzr7o1SZr14sPDsq",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const emails = Array.isArray($json.emails)\n  ? $json.emails\n  : ($json.emails ? [$json.emails] : []);\n\nconst clean = (value) => {\n  if (!value) return \"\";\n\n  if (Array.isArray(value)) {\n    value = value.join(\" \");\n  }\n\n  return String(value)\n    .replace(/\\u00A0/g, \" \")\n    .replace(/\\s+/g, \" \")\n    .trim();\n};\n\nconst pageTitle = clean($json.page_title);\nconst metaDescription = clean($json.meta_description);\n\nconst headings = [...new Set(\n  ($json.headings || [])\n    .map(clean)\n    .filter(text => text.length > 2)\n)];\n\nconst paragraphs = [...new Set(\n  ($json.paragraphs || [])\n    .map(clean)\n    .filter(text => text.length >= 40)\n)];\n\n// Build structured business context\nlet websiteContext = [\n  pageTitle && `Page Title: ${pageTitle}`,\n  metaDescription && `Description: ${metaDescription}`,\n  headings.length && `Headings: ${headings.join(\" | \")}`,\n  paragraphs.length && `Website Information: ${paragraphs.join(\" \")}`\n]\n  .filter(Boolean)\n  .join(\"\\n\");\n\n// Protect DeepSeek token usage\nconst MAX_CHARS = 4000;\n\nif (websiteContext.length > MAX_CHARS) {\n  websiteContext = websiteContext.slice(0, MAX_CHARS);\n}\n\nreturn {\n  json: {\n    emails,\n    page_title: pageTitle,\n    meta_description: metaDescription,\n    website_context: websiteContext,\n    website_context_length: websiteContext.length\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1552,
+        192
+      ],
+      "id": "a7a4281b-e6fb-4533-98e7-7a1a5a1072aa",
+      "name": "Clean Website Content"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"lead_score\": {\n      \"type\": \"number\"\n    },\n    \"qualified\": {\n      \"type\": \"boolean\"\n    },\n    \"recommended_service\": {\n      \"type\": \"string\"\n    },\n    \"automation_opportunity\": {\n      \"type\": \"string\"\n    },\n    \"qualification_reason\": {\n      \"type\": \"string\"\n    },\"business_summary\": {\n  \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"lead_score\",\n    \"qualified\",\n    \"business_summary\",\n    \"recommended_service\",\n    \"automation_opportunity\",\n    \"qualification_reason\"\n  ],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -720,
+        304
+      ],
+      "id": "c4d471f2-26e4-4fff-af28-9bf2a9a7349c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b9f93119-5ae5-4cd4-b931-c4b1659d54d7",
+              "leftValue": "={{ $json.qualified }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "613f0964-b3ef-4f63-bef4-60194e15111c",
+      "name": "Qualified Lead?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7f59f12-821b-4ef4-99dd-f749fd7b2e22",
+              "name": "place_id",
+              "value": "={{ $('Prepare Lead').item.json.place_id }}",
+              "type": "string"
+            },
+            {
+              "id": "72ab8c3f-8f62-4dd4-955d-cfd8d1da6574",
+              "name": "business_name",
+              "value": "={{ $('Prepare Lead').item.json.business_name }}",
+              "type": "string"
+            },
+            {
+              "id": "2a18df8f-cc63-4559-b5ec-9a1fcb63c95b",
+              "name": "website",
+              "value": "={{ $('Prepare Lead').item.json.website }}",
+              "type": "string"
+            },
+            {
+              "id": "ca54b1c6-949c-4840-8bcc-9c23dc37fef5",
+              "name": "phone",
+              "value": "={{ $('Prepare Lead').item.json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "138289fe-6260-44aa-8916-6748545b9b5f",
+              "name": "address",
+              "value": "={{ $('Prepare Lead').item.json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "eca6f713-5e64-4b39-850b-c2833ad97297",
+              "name": "business_type",
+              "value": "={{ $('Prepare Lead').item.json.business_type }}",
+              "type": "string"
+            },
+            {
+              "id": "456540f5-7abf-44dc-824a-406e7aca91b4",
+              "name": "email",
+              "value": "={{ $('Prepare Lead').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "47c78f1b-86eb-4684-aee1-b2f35deb9440",
+              "name": "website_context",
+              "value": "={{ $(\"Clean Website Content\").item.json.website_context }}",
+              "type": "string"
+            },
+            {
+              "id": "91a44cf3-fd7a-4a8c-8406-9756efd9b6d0",
+              "name": "lead_score",
+              "value": "={{ $json.output.lead_score }}",
+              "type": "number"
+            },
+            {
+              "id": "2e582b96-5a3a-4456-bb5f-610348edb70f",
+              "name": "qualified",
+              "value": "={{ $json.output.qualified }}",
+              "type": "boolean"
+            },
+            {
+              "id": "e2344e04-b93d-4907-b5f7-ebf2ef95c02d",
+              "name": "recommended_service",
+              "value": "={{ $json.output.recommended_service }}",
+              "type": "string"
+            },
+            {
+              "id": "a86982b6-e0a0-471a-8024-35b672479d76",
+              "name": "automation_opportunity",
+              "value": "={{ $json.output.automation_opportunity }}",
+              "type": "string"
+            },
+            {
+              "id": "e8555159-32e4-4913-bdc3-4c3dbaf21b92",
+              "name": "qualification_reason",
+              "value": "={{ $json.output.qualification_reason }}",
+              "type": "string"
+            },
+            {
+              "id": "7650f1c1-4d7a-420a-a146-a776285ed95b",
+              "name": "business_summary",
+              "value": "={{ $json.output.business_summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -496,
+        96
+      ],
+      "id": "559ceeb2-5cdb-462d-be77-9307cccb8ba4",
+      "name": "Build Analyzed Lead"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LeadPilot AI CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2976,
+        32
+      ],
+      "id": "26acc82d-26d9-4aca-85b8-0be4140cded3",
+      "name": "Get Existing Leads",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aQy2Rk77kBLdqW3n",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const existingLeads = $(\"Get Existing Leads\").all();\n\nconst placeId = String($json.id || \"\")\n  .trim()\n  .toLowerCase();\n\nconst isDuplicate = existingLeads.some(item => {\n  const existingId = String(item.json.lead_id || \"\")\n    .trim()\n    .toLowerCase();\n\n  return existingId && existingId === placeId;\n});\n\nreturn {\n  json: {\n    ...$json,\n    is_duplicate: isDuplicate\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2656,
+        208
+      ],
+      "id": "5c964d5c-2bb7-4491-b2b3-e08069925585",
+      "name": "Check Duplicate Lead"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f4abd311-9475-4549-ba4f-eca3d5705237",
+              "leftValue": "={{ $json.is_duplicate }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2448,
+        208
+      ],
+      "id": "926f5372-0c8b-45f1-bc36-fe1d1b9540c8",
+      "name": "New Lead?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        448
+      ],
+      "id": "65c08978-53f9-4cdc-9c42-35c923309eab",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        288
+      ],
+      "id": "598db491-f8c6-4e94-af4a-f785788e8760",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LeadPilot AI CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.place_id }}",
+            "business_name": "={{ $json.business_name }}",
+            "website": "={{ $json.website }}",
+            "business_email": "={{ $json.email }}",
+            "lead_source": "={{ $json.lead_score }}",
+            "qualification_reason": "={{ $json.qualification_reason }}",
+            "recommeded_service": "={{ $json.recommended_service }}",
+            "industry": "={{ $('On form submission').item.json.Industry }}",
+            "automation_opportunity": "={{ $json.automation_opportunity }}",
+            "date_discovered": "={{ $now.toISODate() }}",
+            "status": "qualified",
+            "reply_status": "not_contacted",
+            "email_source": "business Website",
+            "country": "={{ $('On form submission').item.json.Country }}",
+            "city": "={{ $('On form submission').item.json.City }}",
+            "business_summary": "={{ $json.business_summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_name",
+              "displayName": "business_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "industry",
+              "displayName": "industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_email",
+              "displayName": "business_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_source",
+              "displayName": "email_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_summary",
+              "displayName": "business_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "automation_opportunity",
+              "displayName": "automation_opportunity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recommeded_service",
+              "displayName": "recommeded_service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_source",
+              "displayName": "lead_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qualification_reason",
+              "displayName": "qualification_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_subject",
+              "displayName": "email_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_body",
+              "displayName": "email_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_discovered",
+              "displayName": "date_discovered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_draft_created",
+              "displayName": "date_draft_created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_connected",
+              "displayName": "last_connected",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reply_status",
+              "displayName": "reply_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f6138877-b350-4ae1-8521-fb8955be52fc",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "formTitle": "LeadPilot AI — Lead Search",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Industry",
+              "placeholder": "Real state agencies",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Country",
+              "placeholder": "UAE",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "City",
+              "placeholder": "Dubai",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Your qualified lead has been added to sheets and draft email has been prepared"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -3312,
+        144
+      ],
+      "id": "67e75529-1a88-4bbc-9914-6a7953ee6a68",
+      "name": "On form submission",
+      "webhookId": "e7dc8ad9-43e8-4d9c-b000-20ddd0128147"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        192
+      ],
+      "id": "ded890ab-d7e7-4f25-ba31-476239486a9e",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        240,
+        208
+      ],
+      "id": "b408aa96-a342-4128-9fa7-0a9323c49b12",
+      "name": "DeepSeek Chat Model1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "tzr7o1SZr14sPDsq",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a personalized outreach email for this qualified lead.\n\nBusiness Name:\n{{ $json.business_name }}\n\nBusiness Summary:\n{{ $json.business_summary }}\n\nRecommended Automation Service:\n{{ $json.recommeded_service }}\n\nAutomation Opportunity:\n{{ $json.automation_opportunity }}\n\nQualification Reason:\n{{ $json.qualification_reason }}\n\nThe email should introduce the relevant automation idea naturally and aim to start a conversation or offer a brief demo.",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a professional B2B outreach email writer for an AI automation freelancer.\n\nWrite a short, personalized cold outreach email based ONLY on the business information and automation opportunity provided.\n\nGOAL:\nStart a conversation and offer a brief demo/discussion. Do not aggressively sell or try to close the deal in the first email.\n\nRULES:\n- Keep the email concise and natural.\n- Do not invent facts, problems, results, clients, case studies, or statistics.\n- Do not claim the business currently has inefficient or manual processes unless explicitly stated.\n- Focus on the specific automation opportunity identified during lead qualification.\n- Explain the potential benefit in simple business language.\n- Do not mention n8n unless it is genuinely useful.\n- Do not mention AI unnecessarily.\n- Avoid spammy language, exaggerated claims, and fake urgency.\n- Do not include website development, SEO, hosting, domains, security, or maintenance services.\n- Do not include placeholders such as [Name] or [Company].\n- Do not include a signature; it will be handled separately.\n- End with a simple, low-pressure call to action asking whether they would be open to seeing/discussing the idea.\n\nReturn ONLY valid JSON in exactly this structure:\n\n{\n  \"email_subject\": \"\",\n  \"email_body\": \"\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c8cd1f75-ee92-4853-b1a3-323354a5942f",
+      "name": "Generate Outreach Email"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"email_subject\": {\n      \"type\": \"string\"\n    },\n    \"email_body\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"email_subject\",\n    \"email_body\"\n  ],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        208
+      ],
+      "id": "9414969b-37b4-4715-b9d1-1ceab651796c",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $json.output.email_subject }}",
+        "message": "={{ $json.output.email_body }}",
+        "options": {
+          "sendTo": "={{ $('Append row in sheet').item.json.business_email }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "a066d4ca-058f-40e7-b846-56de49aa6f7d",
+      "name": "Create a draft",
+      "webhookId": "12c4cf95-8d01-4f76-98bb-f8661c2690f1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LeadPilot AI CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $('Append row in sheet').item.json.lead_id }}",
+            "email_subject": "={{ $('Generate Outreach Email').item.json.output.email_subject }}",
+            "email_body": "={{ $('Generate Outreach Email').item.json.output.email_body }}",
+            "status": "draft_created",
+            "date_draft_created": "={{ $now.toISODate() }}",
+            "gmail_draft_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "business_name",
+              "displayName": "business_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "industry",
+              "displayName": "industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "business_email",
+              "displayName": "business_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email_source",
+              "displayName": "email_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "business_summary",
+              "displayName": "business_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "automation_opportunity",
+              "displayName": "automation_opportunity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "recommeded_service",
+              "displayName": "recommeded_service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "lead_source",
+              "displayName": "lead_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qualification_reason",
+              "displayName": "qualification_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email_subject",
+              "displayName": "email_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_body",
+              "displayName": "email_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_discovered",
+              "displayName": "date_discovered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "date_draft_created",
+              "displayName": "date_draft_created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_connected",
+              "displayName": "last_connected",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reply_status",
+              "displayName": "reply_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "gmail_draft_id",
+              "displayName": "gmail_draft_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        0
+      ],
+      "id": "260d2c64-dee1-4ba5-a5c2-29961bc1ca8c",
+      "name": "Update row in sheet"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ddc24322-4f8c-4fad-ba9c-6dafc55ab8fb",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2224,
+        208
+      ],
+      "id": "81d41571-4015-4254-ba5b-7fa077694103",
+      "name": "Website Found"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GET BUSINESS": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HOME PAGE EMAIL ADDRESS": {
+      "main": [
+        [
+          {
+            "node": "Clean Website Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OPEN WEBSITE HOMEPAGE": {
+      "main": [
+        [
+          {
+            "node": "HOME PAGE EMAIL ADDRESS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EMAIL FOUND?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Lead": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Website Content": {
+      "main": [
+        [
+          {
+            "node": "EMAIL FOUND?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Build Analyzed Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualified Lead?": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Analyzed Lead": {
+      "main": [
+        [
+          {
+            "node": "Qualified Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Lead": {
+      "main": [
+        [
+          {
+            "node": "New Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Lead?": {
+      "main": [
+        [
+          {
+            "node": "Website Found",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Get Existing Leads",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET BUSINESS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Generate Outreach Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Outreach Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Outreach Email",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Outreach Email": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website Found": {
+      "main": [
+        [
+          {
+            "node": "OPEN WEBSITE HOMEPAGE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "efee7340-e632-4df7-b2b1-43950ffe2f21",
+  "meta": {
+    "instanceId": "fa2e7a5c78313e6eb98d1794997f3fa457979bfaf171518f2a28f2b201adf798"
+  },
+  "nodeGroups": [],
+  "id": "JB1WcxDsxdM3Keg4",
+  "tags": []
+}
